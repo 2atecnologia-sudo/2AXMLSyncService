@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QLabel,
+    QComboBox,
+    QRadioButton,
+    QButtonGroup,
     QGroupBox,
     QVBoxLayout,
     QHBoxLayout,
@@ -13,6 +16,8 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QFileDialog,
     QSpinBox,
+    QRadioButton,
+    QButtonGroup,
     QMessageBox
 )
 
@@ -41,7 +46,7 @@ class MainWindow(QMainWindow):
         self.carregarConfiguracao()
 
         self.conectarEventos()
-
+        self.atualizarTipoCertificado()
         self.statusBar().showMessage("Sistema iniciado")
 
     # =====================================================
@@ -82,19 +87,34 @@ class MainWindow(QMainWindow):
 
         layout = QGridLayout()
 
-        layout.addWidget(QLabel("Empresa"), 0, 0)
+        layout.addWidget(QLabel("Tipo do Certificado"), 0, 0)
+
+        self.rbA1 = QRadioButton("A1 (.PFX)")
+        self.rbA3 = QRadioButton("A3 (Token)")
+        self.rbCloud = QRadioButton("Nuvem")
+
+        self.rbA1.setChecked(True)
+
+        linhaTipo = QHBoxLayout()
+        linhaTipo.addWidget(self.rbA1)
+        linhaTipo.addWidget(self.rbA3)
+        linhaTipo.addWidget(self.rbCloud)
+
+        layout.addLayout(linhaTipo, 0, 1)
+
+        layout.addWidget(QLabel("Empresa"), 1, 0)
 
         self.edEmpresa = QLineEdit()
 
-        layout.addWidget(self.edEmpresa, 0, 1)
+        layout.addWidget(self.edEmpresa, 1, 1)
 
-        layout.addWidget(QLabel("CNPJ"), 1, 0)
+        layout.addWidget(QLabel("CNPJ"), 2, 0)
 
         self.edCNPJ = QLineEdit()
 
-        layout.addWidget(self.edCNPJ, 1, 1)
+        layout.addWidget(self.edCNPJ, 2, 1)
 
-        layout.addWidget(QLabel("Certificado"), 2, 0)
+        layout.addWidget(QLabel("Certificado"), 3, 0)
 
         linha = QHBoxLayout()
 
@@ -106,17 +126,17 @@ class MainWindow(QMainWindow):
 
         linha.addWidget(self.btCertificado)
 
-        layout.addLayout(linha, 2, 1)
+        layout.addLayout(linha, 3, 1)
 
-        layout.addWidget(QLabel("Senha"), 3, 0)
+        layout.addWidget(QLabel("Senha"), 4, 0)
 
         self.edSenha = QLineEdit()
 
         self.edSenha.setEchoMode(QLineEdit.Password)
 
-        layout.addWidget(self.edSenha, 3, 1)
+        layout.addWidget(self.edSenha, 4, 1)
 
-        layout.addWidget(QLabel("Pasta XML"), 4, 0)
+        layout.addWidget(QLabel("Pasta XML"), 5, 0)
 
         linha2 = QHBoxLayout()
 
@@ -128,22 +148,53 @@ class MainWindow(QMainWindow):
 
         linha2.addWidget(self.btPasta)
 
-        layout.addLayout(linha2, 4, 1)
+        layout.addLayout(linha2, 5, 1)
 
-        layout.addWidget(QLabel("Intervalo (segundos)"), 5, 0)
+        layout.addWidget(QLabel("Intervalo (segundos)"), 6, 0)
 
         self.spIntervalo = QSpinBox()
 
         self.spIntervalo.setMinimum(10)
         self.spIntervalo.setMaximum(3600)
 
-        layout.addWidget(self.spIntervalo, 5, 1)
+        layout.addWidget(self.spIntervalo, 6, 1)
+
+        # =====================================================
+        # Controles do Certificado A3
+        # =====================================================
+
+        self.lbToken = QLabel("Certificado A3")
+
+        self.cmbToken = QComboBox()
+
+        layout.addWidget(self.lbToken, 7, 0)
+        layout.addWidget(self.cmbToken, 7, 1)
+
+        self.lbPin = QLabel("PIN do Token")
+
+        self.edPin = QLineEdit()
+        self.edPin.setEchoMode(QLineEdit.Password)
+
+        layout.addWidget(self.lbPin, 8, 0)
+        layout.addWidget(self.edPin, 8, 1)
+
+        self.btAtualizarToken = QPushButton("Atualizar Certificados")
+
+        layout.addWidget(self.btAtualizarToken, 9, 1)
+
+# Inicialmente ocultos
+
+        self.lbToken.hide()
+        self.cmbToken.hide()
+
+        self.lbPin.hide()
+        self.edPin.hide()
+
+        self.btAtualizarToken.hide()
 
         grupo.setLayout(layout)
 
         self.layoutPrincipal.addWidget(grupo)
-
-            # =====================================================
 
     def criarBotoes(self):
 
@@ -199,6 +250,29 @@ class MainWindow(QMainWindow):
 
         self.layoutPrincipal.addWidget(grupo)
 
+            # =====================================================
+
+    def atualizarTipoCertificado(self):
+
+        a1 = self.rbA1.isChecked()
+        a3 = self.rbA3.isChecked()
+
+        # ---------- Controles A1 ----------
+        self.edCertificado.setVisible(a1)
+        self.btCertificado.setVisible(a1)
+        self.edSenha.setVisible(a1)
+
+        # ---------- Controles A3 ----------
+        self.lbToken.setVisible(a3)
+        self.cmbToken.setVisible(a3)
+
+        self.lbPin.setVisible(a3)
+        self.edPin.setVisible(a3)
+
+        self.btAtualizarToken.setVisible(a3)
+
+    # =====================================================
+
     # =====================================================
 
     def criarLog(self):
@@ -228,6 +302,10 @@ class MainWindow(QMainWindow):
         self.btSalvar.clicked.connect(self.salvarConfiguracao)
 
         self.btTestar.clicked.connect(self.testarConfiguracao)
+
+        self.rbA1.toggled.connect(self.atualizarTipoCertificado)
+        self.rbA3.toggled.connect(self.atualizarTipoCertificado)
+        self.rbCloud.toggled.connect(self.atualizarTipoCertificado)
 
     # =====================================================
 

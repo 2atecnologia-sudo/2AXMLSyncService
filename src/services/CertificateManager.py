@@ -7,7 +7,7 @@ Gerencia certificados digitais A1 e A3
 """
 
 import os
-
+from src.services.WindowsCertificateStore import WindowsCertificateStore
 
 class CertificateManager:
 
@@ -16,7 +16,7 @@ class CertificateManager:
         self.tipo = None
         self.certificado = None
         self.senha = None
-
+        self.windowsStore = WindowsCertificateStore()
     # -----------------------------------------------------
 
     def configurarA1(self, arquivo, senha):
@@ -59,3 +59,7 @@ class CertificateManager:
     def getTipo(self):
 
         return self.tipo
+
+    def listarCertificadosWindows(self):
+
+        return self.windowsStore.listarCertificados()
