@@ -2,15 +2,15 @@ class SefazClient:
 
     def __init__(self):
 
-    self.certificado = None
-    self.conectado = False
+        self.certificado = None
+        self.conectado = False
 
-    # Configurações da SEFAZ
-    self.uf = "35"              # São Paulo
-    self.ambiente = "1"         # 1=Produção | 2=Homologação
-    self.versao = "1.01"
+        # Configurações da SEFAZ
+        self.uf = "35"              # São Paulo
+        self.ambiente = "1"         # 1=Produção | 2=Homologação
+        self.versao = "1.01"
 
-    self.url = ""
+        self.url = ""
 
     # -------------------------------------------------
 
@@ -19,19 +19,21 @@ class SefazClient:
         self.certificado = certificado
 
     # -------------------------------------------------
-# -------------------------------------------------
 
-def configurarAmbiente(self, ambiente):
+    def configurarAmbiente(self, ambiente):
 
-    self.ambiente = ambiente
+        self.ambiente = ambiente
 
-    if ambiente == "1":
+        if ambiente == "1":
 
-        print("Ambiente: Produção")
+            print("Ambiente: Produção")
 
-    else:
+        else:
 
-        print("Ambiente: Homologação")
+            print("Ambiente: Homologação")
+
+    # -------------------------------------------------
+
     def conectar(self):
 
         print("Conectando à SEFAZ...")
