@@ -13,7 +13,9 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QFileDialog,
     QSpinBox,
-    QMessageBox
+    QMessageBox,
+    QRadioButton,
+    QButtonGroup
 )
 
 
@@ -82,13 +84,39 @@ class MainWindow(QMainWindow):
 
         layout = QGridLayout()
 
-        layout.addWidget(QLabel("Empresa"), 0, 0)
+        # --------------------------------------------------
+# Tipo do certificado
+# --------------------------------------------------
+
+        layout.addWidget(QLabel("Tipo do Certificado"), 0, 0)
+
+        self.rbA1 = QRadioButton("A1 (.PFX)")
+        self.rbA3 = QRadioButton("A3 (Token)")
+        self.rbCloud = QRadioButton("Nuvem")
+
+        self.rbA1.setChecked(True)
+
+        self.grupoCertificado = QButtonGroup(self)
+
+        self.grupoCertificado.addButton(self.rbA1)
+        self.grupoCertificado.addButton(self.rbA3)
+        self.grupoCertificado.addButton(self.rbCloud)
+
+        layoutTipo = QHBoxLayout()
+
+        layoutTipo.addWidget(self.rbA1)
+        layoutTipo.addWidget(self.rbA3)
+        layoutTipo.addWidget(self.rbCloud)
+
+        layout.addLayout(layoutTipo, 0, 1)
+
+        layout.addWidget(QLabel("Empresa"), 1, 0)
 
         self.edEmpresa = QLineEdit()
 
-        layout.addWidget(self.edEmpresa, 0, 1)
+        layout.addWidget(self.edEmpresa, 1, 1)
 
-        layout.addWidget(QLabel("CNPJ"), 1, 0)
+        layout.addWidget(QLabel("CNPJ"), 3, 0)
 
         self.edCNPJ = QLineEdit()
 
@@ -108,7 +136,7 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(linha, 2, 1)
 
-        layout.addWidget(QLabel("Senha"), 3, 0)
+        layout.addWidget(QLabel("Senha"), 4, 0)
 
         self.edSenha = QLineEdit()
 
@@ -116,7 +144,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.edSenha, 3, 1)
 
-        layout.addWidget(QLabel("Pasta XML"), 4, 0)
+        layout.addWidget(QLabel("Pasta XML"), 5, 0)
 
         linha2 = QHBoxLayout()
 
@@ -137,7 +165,7 @@ class MainWindow(QMainWindow):
         self.spIntervalo.setMinimum(10)
         self.spIntervalo.setMaximum(3600)
 
-        layout.addWidget(self.spIntervalo, 5, 1)
+        layout.addWidget(self.spIntervalo, 6, 1)
 
         grupo.setLayout(layout)
 
