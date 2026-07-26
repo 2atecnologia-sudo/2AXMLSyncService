@@ -1,0 +1,323 @@
+"""
+===========================================================
+2A XML Downloader
+
+MainWindow.py
+Versão 0.5
+===========================================================
+"""
+
+from PySide6.QtCore import Qt
+
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QTextEdit,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QFileDialog,
+    QSpinBox,
+    QComboBox,
+    QFrame,
+    QGroupBox,
+    QMessageBox
+)
+
+from src.database.Database import Database
+from src.utils.Logger import Logger
+
+
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.db = Database()
+
+        self.logger = Logger()
+
+        self.setWindowTitle("2A XML Downloader")
+
+        self.resize(1200, 760)
+
+        self.build_interface()
+
+        self.load_config()
+
+        self.logger.info("Janela principal carregada.")
+
+    # =========================================================
+
+    def build_interface(self):
+
+        central = QWidget()
+
+        self.setCentralWidget(central)
+
+        principal = QVBoxLayout()
+
+        principal.setContentsMargins(12, 12, 12, 12)
+
+        principal.setSpacing(10)
+
+        central.setLayout(principal)
+
+        #########################################################
+        # CABEÇALHO
+        #########################################################
+
+        header = QFrame()
+
+        header.setFixedHeight(80)
+
+        hl = QHBoxLayout()
+
+        header.setLayout(hl)
+
+        self.lbLogo = QLabel()
+
+        self.lbLogo.setText("2A")
+
+        self.lbLogo.setFixedSize(64, 64)
+
+        self.lbLogo.setAlignment(Qt.AlignCenter)
+
+        self.lbLogo.setStyleSheet("""
+
+            background:#0B66C3;
+
+            border-radius:8px;
+
+            font-size:28px;
+
+            font-weight:bold;
+
+            color:white;
+
+        """)
+
+        hl.addWidget(self.lbLogo)
+
+        tituloLayout = QVBoxLayout()
+
+        hl.addLayout(tituloLayout)
+
+        titulo = QLabel("2A XML Downloader")
+
+        titulo.setStyleSheet("""
+
+            font-size:24px;
+
+            font-weight:bold;
+
+        """)
+
+        subtitulo = QLabel("Download Automático de XML da SEFAZ")
+
+        subtitulo.setStyleSheet("""
+
+            color:#C0C0C0;
+
+        """)
+
+        tituloLayout.addWidget(titulo)
+
+        tituloLayout.addWidget(subtitulo)
+
+        hl.addStretch()
+
+        self.lbVersao = QLabel("Versão 0.5")
+
+        self.lbVersao.setStyleSheet("""
+
+            font-size:12px;
+
+            color:#A0A0A0;
+
+        """)
+
+        hl.addWidget(self.lbVersao)
+
+        principal.addWidget(header)
+
+        #########################################################
+        # CONTEÚDO
+        #########################################################
+
+        body = QHBoxLayout()
+
+        principal.addLayout(body)
+
+        #########################################################
+        # PAINEL CONFIGURAÇÃO
+        #########################################################
+
+        self.gbConfig = QGroupBox("Configuração")
+
+        self.gbConfig.setMinimumWidth(700)
+
+        body.addWidget(self.gbConfig)
+
+        self.grid = QGridLayout()
+
+        self.gbConfig.setLayout(self.grid)
+
+        #########################################################
+        # EMPRESA
+        #########################################################
+
+        self.grid.addWidget(QLabel("Empresa"), 0, 0)
+
+        self.edEmpresa = QLineEdit()
+
+        self.grid.addWidget(self.edEmpresa, 0, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("CNPJ"), 1, 0)
+
+        self.edCNPJ = QLineEdit()
+
+        self.grid.addWidget(self.edCNPJ, 1, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("Tipo Certificado"), 2, 0)
+
+        self.cbTipo = QComboBox()
+
+        self.cbTipo.addItems([
+            "A1 (.PFX)",
+            "A3 (Token/Cartão)"
+        ])
+
+        self.grid.addWidget(self.cbTipo, 2, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("Certificado"), 3, 0)
+
+        certLayout = QHBoxLayout()
+
+        self.edCertificado = QLineEdit()
+
+        self.btSelecionarCertificado = QPushButton("...")
+
+        self.btSelecionarCertificado.setFixedWidth(40)
+
+        self.btSelecionarCertificado.clicked.connect(
+            self.selecionar_certificado
+        )
+
+        certLayout.addWidget(self.edCertificado)
+
+        certLayout.addWidget(self.btSelecionarCertificado)
+
+        self.grid.addLayout(certLayout, 3, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("Senha"), 4, 0)
+
+        self.edSenha = QLineEdit()
+
+        self.edSenha.setEchoMode(QLineEdit.Password)
+
+        self.grid.addWidget(self.edSenha, 4, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("Pasta XML"), 5, 0)
+
+        pastaLayout = QHBoxLayout()
+
+        self.edPasta = QLineEdit()
+
+        self.btSelecionarPasta = QPushButton("...")
+
+        self.btSelecionarPasta.setFixedWidth(40)
+
+        self.btSelecionarPasta.clicked.connect(
+            self.selecionar_pasta
+        )
+
+        pastaLayout.addWidget(self.edPasta)
+
+        pastaLayout.addWidget(self.btSelecionarPasta)
+
+        self.grid.addLayout(pastaLayout, 5, 1)
+
+        #########################################################
+
+        self.grid.addWidget(QLabel("Intervalo (segundos)"), 6, 0)
+
+        self.spIntervalo = QSpinBox()
+
+        self.spIntervalo.setRange(10, 3600)
+
+        self.spIntervalo.setValue(60)
+
+        self.grid.addWidget(self.spIntervalo, 6, 1)
+
+        #########################################################
+
+        self.grid.setColumnStretch(1, 1)
+
+        #########################################################
+        # BOTÕES
+        #########################################################
+
+        botoes = QHBoxLayout()
+
+        self.btSalvar = QPushButton("Salvar")
+
+        self.btSalvar.clicked.connect(self.salvar)
+
+        botoes.addWidget(self.btSalvar)
+
+        self.btTestar = QPushButton("Testar Configuração")
+
+        botoes.addWidget(self.btTestar)
+
+        self.btBaixar = QPushButton("Baixar Agora")
+
+        botoes.addWidget(self.btBaixar)
+
+        self.grid.addLayout(
+            botoes,
+            7,
+            0,
+            1,
+            2
+        )
+
+        #########################################################
+
+        botoes2 = QHBoxLayout()
+
+        self.btIniciar = QPushButton(
+            "Iniciar Monitoramento"
+        )
+
+        botoes2.addWidget(self.btIniciar)
+
+        self.btParar = QPushButton("Parar")
+
+        botoes2.addWidget(self.btParar)
+
+        self.grid.addLayout(
+            botoes2,
+            8,
+            0,
+            1,
+            2
+        )
+
+        #########################################################
+        # A PARTE 3 CONTINUARÁ AQUI
+        #########################################################
