@@ -18,7 +18,7 @@ from src.database.Database import Database
 from src.gui.MainWindow import MainWindow
 from src.gui.Style import load_style
 from src.utils.Logger import Logger
-
+from src.config.ConfigManager import ConfigManager
 
 APP_NAME = "2A XML Downloader"
 APP_VERSION = "0.2.0"
@@ -41,6 +41,9 @@ class Application:
 
         self.logger.info("Banco de dados inicializado.")
 
+        self.config = ConfigManager()
+
+        self.logger.info("Configuração carregada.")
     # --------------------------------------------------
 
     def create_directories(self):
