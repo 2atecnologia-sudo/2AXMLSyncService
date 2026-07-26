@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QMessageBox,
     QRadioButton,
-    QButtonGroup
+    QButtonGroup,
+    QComboBox
 )
 
 
@@ -161,7 +162,35 @@ class MainWindow(QMainWindow):
         layout.addWidget(QLabel("Intervalo (segundos)"), 5, 0)
 
         self.spIntervalo = QSpinBox()
+# ==================================================
+# Controles do Certificado A3
+# ==================================================
 
+        self.lbToken = QLabel("Certificado A3")
+        self.cmbToken = QComboBox()
+
+        self.lbPin = QLabel("PIN do Token")
+        self.edPin = QLineEdit()
+        self.edPin.setEchoMode(QLineEdit.Password)
+
+        self.btAtualizarToken = QPushButton("Atualizar Certificados")
+
+        layout.addWidget(self.lbToken, 7, 0)
+        layout.addWidget(self.cmbToken, 7, 1)
+
+        layout.addWidget(self.lbPin, 8, 0)
+        layout.addWidget(self.edPin, 8, 1)
+
+        layout.addWidget(self.btAtualizarToken, 9, 1)
+
+# Inicialmente ficam ocultos
+        self.lbToken.setVisible(False)
+        self.cmbToken.setVisible(False)
+
+        self.lbPin.setVisible(False)
+        self.edPin.setVisible(False)
+
+        self.btAtualizarToken.setVisible(False)
         self.spIntervalo.setMinimum(10)
         self.spIntervalo.setMaximum(3600)
 
