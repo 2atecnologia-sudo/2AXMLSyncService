@@ -16,18 +16,16 @@ from PySide6.QtWidgets import (
     QMessageBox
 )
 
-from src.config.ConfigManager import ConfigManager
 
+from src.config.ConfigManager import ConfigManager
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
         self.config = ConfigManager()
-
         self.setWindowTitle("2A XML Downloader")
-        self.resize(1100, 700)
+        self.showMaximized()
 
         self.central = QWidget()
         self.setCentralWidget(self.central)
@@ -53,13 +51,28 @@ class MainWindow(QMainWindow):
         titulo = QLabel("2A XML Downloader")
 
         fonte = QFont()
-        fonte.setPointSize(18)
+
+        fonte.setPointSize(22)
+
         fonte.setBold(True)
 
         titulo.setFont(fonte)
+
         titulo.setAlignment(Qt.AlignCenter)
 
         self.layoutPrincipal.addWidget(titulo)
+
+        subtitulo = QLabel("Download Automático de XML da NF-e")
+
+        fonte2 = QFont()
+
+        fonte2.setPointSize(11)
+
+        subtitulo.setFont(fonte2)
+
+        subtitulo.setAlignment(Qt.AlignCenter)
+
+        self.layoutPrincipal.addWidget(subtitulo)
 
     # =====================================================
 

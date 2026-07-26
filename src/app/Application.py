@@ -48,6 +48,8 @@ class Application:
 
         self.configController = ConfigController()
 
+        self.logger.info("ConfigController inicializado.")
+
         self.logger.info("Application pronta.")
 
     # ----------------------------------------------------
@@ -88,7 +90,7 @@ class Application:
 
         return app
 
-        # ----------------------------------------------------
+    # ----------------------------------------------------
 
     def create_main_window(self):
 
