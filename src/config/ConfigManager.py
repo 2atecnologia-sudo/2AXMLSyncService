@@ -1,42 +1,69 @@
-"""
-===========================================================
-2A XML Downloader
-
-ConfigController.py
-
-Versão 0.4
-===========================================================
-"""
-
-from src.config.ConfigManager import ConfigManager
+import os
+import configparser
 
 
-class ConfigController:
+class ConfigManager:
 
     def __init__(self):
 
-        self.config = ConfigManager()
+        self.folder = "config"
 
-    # --------------------------------------------
+        self.filename = os.path.join(self.folder, "config.ini")
 
-    def carregar(self):
+        self.config = configparser.ConfigParser()
 
-        return self.config
+        self.create()
 
-    # --------------------------------------------
+    # --------------------------------------------------
 
-    def salvar(self):
+    def create(self):
 
-        self.config.save()
+        os.makedirs(self.folder, exist_ok=True)
 
-    # --------------------------------------------
+        if not os.path.exists(self.filename):
+
+            self.config["GERAL"] = {
+                "empresa": "",
+                "cnpj": ""
+            }
+
+            self.config["CERTIFICADO"] = {
+                "arquivo": "",
+                "senha": ""
+            }
+
+            self.config["XML"] = {
+                "pasta": "",
+                "intervalo": "60"
+            }
+
+            self.save()
+
+        self.config.read(self.filename, encoding="utf-8")
+
+    # --------------------------------------------------
+
+    def save(self):
+
+        with open(self.filename, "w", encoding="utf-8") as arquivo:
+
+            self.config.write(arquivo)
+
+    # --------------------------------------------------
 
     def get(self, section, key, default=""):
 
-        return self.config.get(section, key, default)
+        try:
+            return self.config[section][key]
+        except:
+            return default
 
-    # --------------------------------------------
+    # --------------------------------------------------
 
     def set(self, section, key, value):
 
-        self.config.set(section, key, value)
+        if section not in self.config:
+
+            self.config[section] = {}
+
+        self.config[section][key] = str(value)
