@@ -2,9 +2,9 @@
 ===========================================================
 2A XML Downloader
 
-ConfigController.py
-
-Versão 0.4
+Arquivo..........: ConfigController.py
+Versão...........: 0.4
+Empresa..........: 2A Tecnologia
 ===========================================================
 """
 
@@ -15,28 +15,40 @@ class ConfigController:
 
     def __init__(self):
 
-        self.config = ConfigManager()
+        self.manager = ConfigManager()
 
-    # --------------------------------------------
-
-    def carregar(self):
-
-        return self.config
-
-    # --------------------------------------------
-
-    def salvar(self):
-
-        self.config.save()
-
-    # --------------------------------------------
+    # --------------------------------------------------
 
     def get(self, section, key, default=""):
 
-        return self.config.get(section, key, default)
+        return self.manager.get(section, key, default)
 
-    # --------------------------------------------
+    # --------------------------------------------------
 
     def set(self, section, key, value):
 
-        self.config.set(section, key, value)
+        self.manager.set(section, key, value)
+
+    # --------------------------------------------------
+
+    def save(self):
+
+        self.manager.save()
+
+    # --------------------------------------------------
+
+    def create(self):
+
+        self.manager.create()
+
+    # --------------------------------------------------
+
+    def carregar(self):
+
+        return self.manager
+
+    # --------------------------------------------------
+
+    def salvar(self):
+
+        self.manager.save()
