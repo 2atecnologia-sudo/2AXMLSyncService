@@ -306,6 +306,36 @@ class MainWindow(QMainWindow):
         self.rbA1.toggled.connect(self.atualizarTipoCertificado)
         self.rbA3.toggled.connect(self.atualizarTipoCertificado)
         self.rbCloud.toggled.connect(self.atualizarTipoCertificado)
+        self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
+        # =====================================================
+
+    def atualizarListaCertificados(self):
+
+        from src.services.CertificateManager import CertificateManager
+
+        manager = CertificateManager()
+
+        certificados = manager.listarCertificadosWindows()
+
+        self.cmbToken.clear()
+
+        if len(certificados) == 0:
+
+            QMessageBox.information(
+                self,
+                "Certificados",
+                "Nenhum certificado encontrado."
+            )
+
+            return
+
+        for cert in certificados:
+
+            self.cmbToken.addItem(cert)
+
+        self.log(f"{len(certificados)} certificado(s) encontrado(s).")
+    
+    
 
     # =====================================================
 
