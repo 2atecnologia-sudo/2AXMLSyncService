@@ -1,4 +1,3 @@
-from src.services.CertificateManager import CertificateManager
 from src.services.WindowsCertificateStore import WindowsCertificateStore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -45,10 +44,6 @@ class MainWindow(QMainWindow):
         self.criarBotoes()
         self.criarStatus()
         self.criarLog()
-
-        print(type(self))
-        print(hasattr(self, "carregarConfiguracao"))
-        print([m for m in dir(self) if "Configuracao" in m])
 
         self.carregarConfiguracao()
 
@@ -316,59 +311,76 @@ class MainWindow(QMainWindow):
         self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
         # =====================================================
 
+        def atualizarListaCertificados(self):
+
+            from src.services.CertificateManager import CertificateManager
+
+        manager = CertificateManager()
+
+        certificados = manager.listarCertificadosWindows()
+
+        self.cmbToken.clear()
+
+        if len(certificados) == 0:
+
+            QMessageBox.information(
+                self,
+                "Certificados",
+                "Nenhum certificado encontrado."
+            )
+
+            return
+
+        for cert in certificados:
+
+            self.cmbToken.addItem(cert)
+
+        self.log(f"{len(certificados)} certificado(s) encontrado(s).")
+    
+    
+
     # =====================================================
 
-    def log(self, texto):
+        def log(self, texto):
 
          self.txtLog.append(texto)
 
-         self.statusBar().showMessage(texto)
+        self.statusBar().showMessage(texto)
 
             # =====================================================
-    def atualizarListaCertificados(self):
+def atualizarListaCertificados(self):
 
-         print("=== Atualizando certificados ===")
+    self.cmbToken.clear()
 
-         manager = CertificateManager()
+    store = WindowsCertificateStore()
 
-         certificados = manager.listarCertificadosWindows()
+    certificados = store.listarCertificados()
 
-         print("Certificados encontrados:", len(certificados))
+    if len(certificados) == 0:
 
-         self.cmbToken.clear()
-
-         if len(certificados) == 0:
-
-          QMessageBox.information(
+        QMessageBox.information(
             self,
             "Certificados",
-            "Nenhum certificado encontrado."
-          )
+            "Nenhum certificado ICP-Brasil encontrado."
+        )
 
-          return
+        return
 
-         self.certificados = certificados
-         for cert in certificados:
+        self.certificados = certificados
 
-            print("CERTIFICADO:", cert)
+        for cert in certificados:
 
-            texto = (
+         texto = (
             f"{cert['nome']} | "
             f"CNPJ: {cert['cnpj']} | "
             f"Validade: {cert['validade']}"
-            )
+        )
 
-            print("Texto:", texto)
+        self.cmbToken.addItem(texto)
 
-            self.cmbToken.addItem(texto)
+        self.log(f"{len(certificados)} certificado(s) encontrado(s).")
 
-            print("Itens no Combo:", self.cmbToken.count())
-            self.cmbToken.setCurrentIndex(0)
 
-            # Cursor vai para o PIN
-         self.edPin.setFocus()
-         self.edPin.selectAll()
-         
     def selecionarCertificado(self):
 
         arquivo, _ = QFileDialog.getOpenFileName(
@@ -400,46 +412,8 @@ class MainWindow(QMainWindow):
         self.config.set("GERAL", "empresa", self.edEmpresa.text())
         self.config.set("GERAL", "cnpj", self.edCNPJ.text())
 
-    # ---------------- Tipo do certificado ----------------
-
-        if self.rbA1.isChecked():
-
-            self.config.set("CERTIFICADO", "tipo", "A1")
-            self.config.set("CERTIFICADO", "arquivo", self.edCertificado.text())
-            self.config.set("CERTIFICADO", "senha", self.edSenha.text())
-            self.config.set("CERTIFICADO", "thumbprint", "")
-            self.config.set("CERTIFICADO", "nome", "")
-
-        elif self.rbA3.isChecked():
-
-            self.config.set("CERTIFICADO", "tipo", "A3")
-
-            indice = self.cmbToken.currentIndex()
-
-            if indice >= 0 and hasattr(self, "certificados"):
-
-                cert = self.certificados[indice]
-
-                self.config.set(
-                "CERTIFICADO",
-                "thumbprint",
-                cert["thumbprint"]
-               )
-
-            self.config.set(
-                "CERTIFICADO",
-                "nome",
-                cert["nome"]
-            )
-
-            self.config.set("CERTIFICADO", "arquivo", "")
-            self.config.set("CERTIFICADO", "senha", "")
-
-        else:
-
-             self.config.set("CERTIFICADO", "tipo", "CLOUD")
-
-    # ---------------- XML ----------------
+        self.config.set("CERTIFICADO", "arquivo", self.edCertificado.text())
+        self.config.set("CERTIFICADO", "senha", self.edSenha.text())
 
         self.config.set("XML", "pasta", self.edPasta.text())
         self.config.set("XML", "intervalo", self.spIntervalo.value())
@@ -447,6 +421,7 @@ class MainWindow(QMainWindow):
         self.config.save()
 
         self.log("Configuração salva com sucesso.")
+
     # =====================================================
 
     def carregarConfiguracao(self):
@@ -481,23 +456,6 @@ class MainWindow(QMainWindow):
             self.spIntervalo.setValue(int(intervalo))
         except:
             self.spIntervalo.setValue(60)
-
-            # Carrega tipo de certificado salvo
-
-        tipo = self.config.get(
-            "CERTIFICADO",
-            "tipo",
-            "A1"
-        )
-            
-        print("Tipo certificado salvo:", tipo)
-        if tipo == "A3":
-
-            self.rbA3.setChecked(True)
-
-            self.atualizarTipoCertificado()
-
-            self.atualizarListaCertificados()
 
                 # =====================================================
 

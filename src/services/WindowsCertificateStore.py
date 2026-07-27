@@ -2,35 +2,98 @@
 ===========================================================
 WindowsCertificateStore.py
 
-Responsável por acessar os certificados instalados
-no Windows (A1 e A3).
+Leitura dos certificados instalados no Windows
+utilizando .NET (pythonnet)
+
+Compatível com:
+
+- Certificado A1
+- Certificado A3 (SafeNet)
+- ICP-Brasil
 ===========================================================
 """
-from py_cert_store import find_windows_cert_all
+
+import clr
+
+clr.AddReference("System")
+
+from System.Security.Cryptography.X509Certificates import (
+    X509Store,
+    StoreName,
+    StoreLocation,
+    OpenFlags
+    )
+
 
 class WindowsCertificateStore:
 
     def __init__(self):
         pass
 
-    # --------------------------------------------------
+    # ----------------------------------------------------------
 
     def listarCertificados(self):
-        """
-        Retorna todos os certificados encontrados no Windows.
-        """
+
+        certificados = []
+
+        store = X509Store(
+            StoreName.My,
+            StoreLocation.CurrentUser
+        )
+
+        store.Open(OpenFlags.ReadOnly)
+
         try:
 
-            certificados = find_windows_cert_all()
+            for cert in store.Certificates:
 
-            return certificados
+                assunto = cert.Subject
 
-        except Exception as erro:
+                # Ignora certificados internos do Windows
+                if "ICP-Brasil" not in assunto:
+                    continue
 
-            print(f"Erro ao listar certificados: {erro}")
+                nome = ""
+                cnpj = ""
 
-        return []
-        
+                try:
 
+                    partes = assunto.split(",")
 
-    
+                    primeira = partes[0]
+
+                    if ":" in primeira:
+
+                        nome, cnpj = primeira.replace("CN=", "").split(":", 1)
+
+                    else:
+
+                        nome = primeira.replace("CN=", "")
+
+                except Exception:
+
+                    nome = assunto
+
+                certificados.append({
+
+                    "nome": nome.strip(),
+
+                    "cnpj": cnpj.strip(),
+
+                    "assunto": assunto,
+
+                    "emissor": cert.Issuer,
+
+                    "validade": str(cert.NotAfter),
+
+                    "thumbprint": cert.Thumbprint,
+
+                    "certificado": cert
+
+                })
+
+        finally:
+
+            store.Close()
+
+        return certificados

@@ -4,11 +4,14 @@ import configparser
 
 class ConfigManager:
 
+    
     def __init__(self):
 
         self.folder = "config"
 
         self.filename = os.path.join(self.folder, "config.ini")
+
+        print("CONFIG:", os.path.abspath(self.filename))
 
         self.config = configparser.ConfigParser()
 
@@ -28,9 +31,12 @@ class ConfigManager:
             }
 
             self.config["CERTIFICADO"] = {
+                "tipo": "A1",
                 "arquivo": "",
-                "senha": ""
-            }
+                "senha": "",
+                "thumbprint": "",
+                "nome": ""
+    }
 
             self.config["XML"] = {
                 "pasta": "",
