@@ -1,21 +1,50 @@
-import win32crypt
+import clr
 
-store = win32crypt.CertOpenSystemStore(None, "MY")
+clr.AddReference("System")
 
-cert = win32crypt.CertEnumCertificatesInStore(store, None)
+from System.Security.Cryptography.X509Certificates import (
+    X509Store,
+    StoreName,
+    StoreLocation,
+    OpenFlags
+)
 
-contador = 0
+store = X509Store(StoreName.My, StoreLocation.CurrentUser)
+store.Open(OpenFlags.ReadOnly)
 
-while cert:
+try:
+    for cert in store.Certificates:
 
-    contador += 1
+        print("=" * 80)
+        print("Subject :", cert.Subject)
+        print("Issuer  :", cert.Issuer)
+        print("Thumb   :", cert.Thumbprint)
+        print("Válido  :", cert.NotAfter)
+        print("HasKey  :", cert.HasPrivateKey)
 
-    print("--------------------------------")
+        try:
+            rsa = cert.PrivateKey
 
-    print(cert)
+            print("PrivateKey:", rsa)
 
-    cert = win32crypt.CertEnumCertificatesInStore(store, cert)
+            if rsa:
 
-print()
+                print("Tipo Python :", type(rsa))
+                print("Classe .NET :", rsa.GetType().FullName)
 
-print("TOTAL:", contador)
+                try:
+                    info = rsa.CspKeyContainerInfo
+
+                    print("ProviderName   :", info.ProviderName)
+                    print("ProviderType   :", info.ProviderType)
+                    print("HardwareDevice :", info.HardwareDevice)
+                    print("MachineKeyStore:", info.MachineKeyStore)
+
+                except Exception as e:
+                    print("Erro CSP:", e)
+
+        except Exception as e:
+            print("Erro PrivateKey:", e)
+
+finally:
+    store.Close()
