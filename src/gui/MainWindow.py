@@ -50,10 +50,11 @@ class MainWindow(QMainWindow):
         print(hasattr(self, "carregarConfiguracao"))
         print([m for m in dir(self) if "Configuracao" in m])
 
+        self.atualizarTipoCertificado()
         self.carregarConfiguracao()
 
         self.conectarEventos()
-        self.atualizarTipoCertificado()
+        
         self.statusBar().showMessage("Sistema iniciado")
 
     # =====================================================
@@ -173,10 +174,14 @@ class MainWindow(QMainWindow):
         self.lbToken = QLabel("Certificado A3")
 
         self.cmbToken = QComboBox()
-
+        self.lbStatusCertificado = QLabel("")
         layout.addWidget(self.lbToken, 7, 0)
         layout.addWidget(self.cmbToken, 7, 1)
-
+        layout.addWidget(
+        self.lbStatusCertificado,
+        8,
+        1
+     )
         self.lbPin = QLabel("PIN do Token")
 
         self.edPin = QLineEdit()
@@ -185,7 +190,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.lbPin, 8, 0)
         layout.addWidget(self.edPin, 8, 1)
 
-        self.btAtualizarToken = QPushButton("Atualizar Certificados")
+        self.btAtualizarToken = QPushButton("Buscar Certificados")
+        self.btAtualizarToken.hide()
+
 
         layout.addWidget(self.btAtualizarToken, 9, 1)
 
@@ -305,15 +312,19 @@ class MainWindow(QMainWindow):
         self.btCertificado.clicked.connect(self.selecionarCertificado)
 
         self.btPasta.clicked.connect(self.selecionarPasta)
-
         self.btSalvar.clicked.connect(self.salvarConfiguracao)
 
         self.btTestar.clicked.connect(self.testarConfiguracao)
 
+        self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
+
         self.rbA1.toggled.connect(self.atualizarTipoCertificado)
         self.rbA3.toggled.connect(self.atualizarTipoCertificado)
         self.rbCloud.toggled.connect(self.atualizarTipoCertificado)
-        self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
+        self.cmbToken.currentIndexChanged.connect(self.certificadoSelecionado)
+                                                 
+        
+        
         # =====================================================
 
     # =====================================================
@@ -326,7 +337,16 @@ class MainWindow(QMainWindow):
 
             # =====================================================
     def atualizarListaCertificados(self):
+         # Volta para modo edição
+         self.cmbToken.show()
+         self.cmbToken.setEnabled(True)
 
+         self.lbPin.show()
+         self.edPin.show()
+
+         self.btAtualizarToken.setText(
+             "Buscar Certificados"
+         )
          print("=== Atualizando certificados ===")
 
          manager = CertificateManager()
@@ -362,13 +382,37 @@ class MainWindow(QMainWindow):
 
             self.cmbToken.addItem(texto)
 
-            print("Itens no Combo:", self.cmbToken.count())
-            self.cmbToken.setCurrentIndex(0)
 
-            # Cursor vai para o PIN
+                    # Seleciona certificado salvo
+
+            thumbprint_salvo = self.config.get(
+            "CERTIFICADO",
+            "thumbprint"
+        )
+
+         if thumbprint_salvo:
+
+            for indice, cert in enumerate(certificados):
+
+                if cert["thumbprint"] == thumbprint_salvo:
+
+                    self.cmbToken.setCurrentIndex(indice)
+
+                    print(
+                        "Certificado salvo localizado:",
+                        cert["nome"]
+                    )
+
+                    self.btAtualizarToken.setText(
+                        "Editar Certificado"
+                    )
+
+                    print("Certificado salvo localizado - aguardando PIN")
+                    break                                  
+        # Cursor vai para o PIN
          self.edPin.setFocus()
          self.edPin.selectAll()
-         
+    
     def selecionarCertificado(self):
 
         arquivo, _ = QFileDialog.getOpenFileName(
@@ -443,10 +487,32 @@ class MainWindow(QMainWindow):
 
         self.config.set("XML", "pasta", self.edPasta.text())
         self.config.set("XML", "intervalo", self.spIntervalo.value())
+        if self.rbA3.isChecked():
+
+            self.config.set(
+               "CERTIFICADO",
+               "tipo",
+               "A3"
+        )
+
+            self.config.set(
+               "CERTIFICADO",
+               "configurado",
+               "sim"
+        )
 
         self.config.save()
 
         self.log("Configuração salva com sucesso.")
+
+        if self.rbA3.isChecked():
+
+           if self.edPin.text().strip():
+
+                self.lbPin.hide()
+                self.edPin.hide()
+
+                print("✓ Certificado A3 conectado")
     # =====================================================
 
     def carregarConfiguracao(self):
@@ -489,7 +555,13 @@ class MainWindow(QMainWindow):
             "tipo",
             "A1"
         )
-            
+        thumbprint = self.config.get(
+            "CERTIFICADO",
+            "thumbprint",
+           ""
+       )
+
+        print("Thumbprint salvo:", thumbprint)
         print("Tipo certificado salvo:", tipo)
         if tipo == "A3":
 
@@ -499,7 +571,27 @@ class MainWindow(QMainWindow):
 
             self.atualizarListaCertificados()
 
-                # =====================================================
+            if thumbprint:
+
+              # Mantém o certificado visível no combo
+               self.cmbToken.show()
+              # certificado já conectado, não pedir PIN novamente
+               self.lbPin.hide()
+               self.edPin.hide()
+
+               # Altera o botão
+               self.btAtualizarToken.setText("Editar Certificado")
+
+               print("Modo conectado: certificado carregado")
+
+    def certificadoSelecionado(self):
+
+         # Quando escolher um certificado no combo,
+         # libera o campo PIN
+
+               self.lbPin.show()
+               self.edPin.show()
+
 
     def testarConfiguracao(self):
 

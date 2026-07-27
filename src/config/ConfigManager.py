@@ -35,8 +35,9 @@ class ConfigManager:
                 "arquivo": "",
                 "senha": "",
                 "thumbprint": "",
-                "nome": ""
-    }
+                "nome": "",
+                "configurado": "nao"
+      }
 
             self.config["XML"] = {
                 "pasta": "",
