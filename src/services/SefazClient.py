@@ -1,3 +1,6 @@
+from src.config.ConfigManager import ConfigManager
+
+
 class SefazClient:
 
     def __init__(self):
@@ -11,6 +14,12 @@ class SefazClient:
         self.versao = "1.01"
 
         self.url = ""
+
+        self.config = ConfigManager()
+
+        self.tipoCertificado = ""
+        self.arquivoCertificado = ""
+        self.thumbprint = ""
 
     # -------------------------------------------------
 
@@ -34,7 +43,35 @@ class SefazClient:
 
     # -------------------------------------------------
 
+    def carregarConfiguracao(self):
+
+        self.tipoCertificado = self.config.get(
+            "CERTIFICADO",
+            "tipo",
+            ""
+        )
+
+        self.arquivoCertificado = self.config.get(
+            "CERTIFICADO",
+            "arquivo",
+            ""
+        )
+
+        self.thumbprint = self.config.get(
+            "CERTIFICADO",
+            "thumbprint",
+            ""
+        )
+
+        print("Tipo:", self.tipoCertificado)
+        print("Arquivo:", self.arquivoCertificado)
+        print("Thumbprint:", self.thumbprint)
+
+    # -------------------------------------------------
+
     def conectar(self):
+
+        self.carregarConfiguracao()
 
         print("Conectando à SEFAZ...")
 

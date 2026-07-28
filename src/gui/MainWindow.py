@@ -217,7 +217,7 @@ class MainWindow(QMainWindow):
 
         self.btSalvar = QPushButton("Salvar")
 
-        self.btTestar = QPushButton("Testar Configuração")
+        self.btTestar = QPushButton("Testar conexão SEFAZ")
 
         self.btIniciar = QPushButton("Iniciar Serviço")
 
@@ -257,7 +257,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(QLabel("Serviço:"), 2, 0)
 
-        self.lbServico = QLabel("Parado")
+        self.lbServico = QLabel("SEFAZ: Não conectado")
 
         layout.addWidget(self.lbServico, 2, 1)
 
@@ -277,19 +277,29 @@ class MainWindow(QMainWindow):
         self.btCertificado.setVisible(a1)
         self.edSenha.setVisible(a1)
 
+        
         # ---------- Controles A3 ----------
         self.lbToken.setVisible(a3)
         self.cmbToken.setVisible(a3)
-
-        self.lbPin.setVisible(a3)
-        self.edPin.setVisible(a3)
-
         self.btAtualizarToken.setVisible(a3)
 
-    # =====================================================
+        thumbprint = self.config.get(
+            "CERTIFICADO",
+            "thumbprint",
+            ""
+        )
+
+        if a3 and thumbprint:
+            # Certificado já salvo
+            self.lbPin.hide()
+            self.edPin.hide()
+            self.btAtualizarToken.setText("Editar Certificado")
+        else:
+            self.lbPin.setVisible(a3)
+            self.edPin.setVisible(a3)
+            self.btAtualizarToken.setText("Buscar Certificados")
 
     # =====================================================
-
     def criarLog(self):
 
         grupo = QGroupBox("Log")
@@ -315,7 +325,7 @@ class MainWindow(QMainWindow):
         self.btPasta.clicked.connect(self.selecionarPasta)
         self.btSalvar.clicked.connect(self.salvarConfiguracao)
 
-        self.btTestar.clicked.connect(self.testarConfiguracao)
+        self.btTestar.clicked.connect(self.testarConexaoSEFAZ)
 
         self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
 
@@ -594,41 +604,37 @@ class MainWindow(QMainWindow):
                self.edPin.show()
 
 
-    def testarConfiguracao(self):
+    
 
-        erros = []
+    def testarConexaoSEFAZ(self):
 
-        if not self.edEmpresa.text().strip():
-            erros.append("Empresa não informada.")
+        tipo = self.config.get(
+            "CERTIFICADO",
+            "tipo",
+            ""
+        )
 
-        if not self.edCNPJ.text().strip():
-            erros.append("CNPJ não informado.")
-
-        if not self.edCertificado.text().strip():
-            erros.append("Certificado não informado.")
-
-        if not self.edPasta.text().strip():
-            erros.append("Pasta XML não informada.")
-
-        if erros:
+        if not tipo:
 
             QMessageBox.warning(
                 self,
-                "Configuração",
-                "\n".join(erros)
+                "SEFAZ",
+                "Nenhum certificado configurado."
             )
-
-            self.log("Falha na validação da configuração.")
 
             return
 
+        from src.services.SefazClient import SefazClient
+
+        cliente = SefazClient()
+
+        cliente.conectar()
+
         QMessageBox.information(
             self,
-            "Configuração",
-            "Configuração válida."
+            "SEFAZ",
+            "Certificado encontrado.\nPreparando conexão com a SEFAZ..."
         )
-
-        self.log("Configuração validada com sucesso.")
 
     # =====================================================
 
