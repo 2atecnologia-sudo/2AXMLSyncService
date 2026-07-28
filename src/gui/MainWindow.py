@@ -1,11 +1,12 @@
 from src.services.CertificateManager import CertificateManager
 from src.services.WindowsCertificateStore import WindowsCertificateStore
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QLabel,
+    QMessageBox,
     QComboBox,
     QRadioButton,
     QButtonGroup,
@@ -122,7 +123,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.edCNPJ, 2, 1)
 
-        layout.addWidget(QLabel("Certificado"), 3, 0)
+        layout.addWidget(QLabel("Certificado (.PFX)"), 3, 0)
 
         linha = QHBoxLayout()
 
@@ -178,24 +179,24 @@ class MainWindow(QMainWindow):
         self.lbStatusCertificado = QLabel("")
         layout.addWidget(self.lbToken, 7, 0)
         layout.addWidget(self.cmbToken, 7, 1)
-        layout.addWidget(
-        self.lbStatusCertificado,
-        8,
-        1
-     )
+
+        self.lbMensagemCertificado = QLabel("")
+        self.lbMensagemCertificado.setWordWrap(True)
+        layout.addWidget(self.lbMensagemCertificado, 8, 1)
+        layout.addWidget(self.lbStatusCertificado,9,1)
         self.lbPin = QLabel("PIN do Token")
 
         self.edPin = QLineEdit()
         self.edPin.setEchoMode(QLineEdit.Password)
 
-        layout.addWidget(self.lbPin, 8, 0)
-        layout.addWidget(self.edPin, 8, 1)
+        layout.addWidget(self.lbPin, 10, 0)
+        layout.addWidget(self.edPin, 10, 1)
 
         self.btAtualizarToken = QPushButton("Buscar Certificados")
         self.btAtualizarToken.hide()
 
 
-        layout.addWidget(self.btAtualizarToken, 9, 1)
+        layout.addWidget(self.btAtualizarToken, 11, 1)
 
 # Inicialmente ocultos
 
@@ -329,13 +330,30 @@ class MainWindow(QMainWindow):
 
         self.btAtualizarToken.clicked.connect(self.atualizarListaCertificados)
 
-        self.rbA1.toggled.connect(self.atualizarTipoCertificado)
+        self.rbA1.toggled.connect(self.tipoA1Selecionado)
         self.rbA3.toggled.connect(self.atualizarTipoCertificado)
         self.rbCloud.toggled.connect(self.atualizarTipoCertificado)
         self.cmbToken.currentIndexChanged.connect(self.certificadoSelecionado)
                                                  
-        
-        
+    def tipoA1Selecionado(self, marcado):
+
+        self.atualizarTipoCertificado()
+
+        if marcado:
+            QMessageBox.information(
+                self,
+                "Certificado A1",
+                "Selecione o arquivo do certificado digital (.PFX) e informe a senha."
+                 )
+        self.btCertificado.setStyleSheet(
+            "background-color: #FFD54F;"
+        )
+
+        QTimer.singleShot(
+            1000,
+            lambda: self.btCertificado.setStyleSheet("")
+        )
+            
         # =====================================================
 
     # =====================================================
@@ -435,7 +453,7 @@ class MainWindow(QMainWindow):
 
         if arquivo:
             self.edCertificado.setText(arquivo)
-
+            self.btCertificado.setStyleSheet("")
     # =====================================================
 
     def selecionarPasta(self):
