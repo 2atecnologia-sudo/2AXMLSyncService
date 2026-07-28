@@ -97,9 +97,9 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(QLabel("Tipo do Certificado"), 0, 0)
 
-        self.rbA1 = QRadioButton("A1 (.PFX)")
-        self.rbA3 = QRadioButton("A3 (Token)")
-        self.rbCloud = QRadioButton("Nuvem")
+        self.rbA1 = QRadioButton("Tipo A1 Arquivo (.PFX)")
+        self.rbA3 = QRadioButton("Tipo A1/A3 Certificado Instalado")
+        self.rbCloud = QRadioButton("Nuvem") 
 
         self.rbA1.setChecked(True)
 
@@ -164,6 +164,7 @@ class MainWindow(QMainWindow):
 
         self.spIntervalo.setMinimum(10)
         self.spIntervalo.setMaximum(3600)
+
 
         layout.addWidget(self.spIntervalo, 6, 1)
 

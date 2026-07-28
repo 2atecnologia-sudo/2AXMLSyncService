@@ -1,0 +1,18 @@
+[33md0c2aeb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Adiciona testes para identificação de certificados A1/A3
+[33m3d61ab8[m Adiciona utilitário para testes de certificados A1/A3
+[33m8eb3f23[m Ajusta fluxo certificado A3 editar e PIN
+[33m9ef2997[m Implementa leitura e salvamento do certificado A3
+[33mafd3868[m python main
+[33mc379b19[m MainWindow corrigida e seleção de tipo de certificado funcionando
+[33m4da725d[m Projeto estável após recuperação do MainWindow
+[33m57c8afe[m Estrutura inicial da integração SEFAZ
+[33me429f86[m Versão 0.4 restaurada e funcionando
+[33m78f1aed[m Versão 0.5 - Controles A3 adicionados
+[33m0141d8e[m Versão 0.5 - Adicionado seleção do tipo de certificado
+[33mc0d604d[m Versão 0.4 - Projeto funcionando novamente
+[33m0f8cc7c[m[33m ([m[1;32mbackup-v04-quebrada[m[33m)[m Versão 0.4 - Adicionado ConfigController
+[33m9b8f148[m Versão 0.4 - Application e arquitetura inicial
+[33mf58aa7f[m Versão 0.4 - Início da arquitetura MVC
+[33m014856f[m Versão 0.3 - ConfigManager integrado ao MainWindow
+[33m5734507[m Versão 0.3 - Adicionado ConfigManager
+[33m9e2839e[m Versão 0.1 - Estrutura inicial
