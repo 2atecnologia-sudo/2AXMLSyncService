@@ -1,4 +1,6 @@
 from src.config.ConfigManager import ConfigManager
+from src.services.SefazConnection import SefazConnection
+from src.services.SefazSoapBuilder import SefazSoapBuilder
 
 
 class SefazClient:
@@ -75,10 +77,25 @@ class SefazClient:
 
         print("Conectando à SEFAZ...")
 
+        builder = SefazSoapBuilder()
+
+        xml = builder.montarConsultaNSU(
+            self.config.get("GERAL", "cnpj"),
+            "000000000000000"
+        )
+
+        soap = builder.montarEnvelopeSOAP(xml)
+
+        conexao = SefazConnection()
+
+        conexao.enviar(
+            "https://www1.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx",
+            soap
+        )
+
         self.conectado = True
 
         return True
-
     # -------------------------------------------------
 
     def desconectar(self):
