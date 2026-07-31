@@ -1,5 +1,6 @@
 from src.services.CertificateManager import CertificateManager
 from src.services.WindowsCertificateStore import WindowsCertificateStore
+from src.utils.DiagnosticLogger import DiagnosticLogger
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -32,6 +33,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        # Logger central da aplicação
+        self.logger = DiagnosticLogger()
         self.config = ConfigManager()
         self.setWindowTitle("2A XML Downloader")
         self.showMaximized()
@@ -52,11 +55,47 @@ class MainWindow(QMainWindow):
         print([m for m in dir(self) if "Configuracao" in m])
 
         self.atualizarTipoCertificado()
+
         self.carregarConfiguracao()
 
+        self.validarCertificadoNaInicializacao()
+
         self.conectarEventos()
-        
+
         self.statusBar().showMessage("Sistema iniciado")
+
+        self.logger.info("Sistema iniciado.")
+
+        self.logger.sucesso("Painel de diagnóstico conectado.")
+
+    # ===============================================
+
+    def validarCertificadoNaInicializacao(self):
+
+        print(">>> validarCertificadoNaInicializacao")
+
+        configurado = self.config.get(
+            "CERTIFICADO",
+            "configurado",
+            "nao"
+        )
+
+        if configurado != "sim":
+            return
+
+        from src.services.SefazClient import SefazClient
+
+        cliente = SefazClient()
+
+        resultado = cliente.validarCertificado()
+
+        if not resultado["sucesso"]:
+
+            print("ERRO:", resultado["mensagem"])
+
+            self.lbCertificado.setText("🔴 Certificado vencido")
+
+            self.atualizarStatusServico("aguardando")
 
     # =====================================================
 
@@ -263,7 +302,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(QLabel("Serviço:"), 2, 0)
 
-        self.lbServico = QLabel("SEFAZ: Não conectado")
+        self.lbServico = QLabel("🟡 Aguardando configuração")
 
         layout.addWidget(self.lbServico, 2, 1)
 
@@ -315,6 +354,9 @@ class MainWindow(QMainWindow):
         self.txtLog = QTextEdit()
 
         self.txtLog.setReadOnly(True)
+
+        # Conecta o logger ao painel de log
+        self.logger.conectar(self.adicionarMensagemLog)
 
         layout.addWidget(self.txtLog)
 
@@ -611,21 +653,36 @@ class MainWindow(QMainWindow):
         except:
             self.spIntervalo.setValue(60)
 
-            # Carrega tipo de certificado salvo
+        # -------------------------------------------------
+        # Certificado
+        # -------------------------------------------------
 
         tipo = self.config.get(
             "CERTIFICADO",
             "tipo",
             "A1"
         )
+
+        configurado = self.config.get(
+            "CERTIFICADO",
+            "configurado",
+            "nao"
+        )
+
+        if configurado == "sim":
+            self.atualizarStatusServico("verificando")
+        else:
+            self.atualizarStatusServico("aguardando")
+
         thumbprint = self.config.get(
             "CERTIFICADO",
             "thumbprint",
-           ""
-       )
+            ""
+        )
 
         print("Thumbprint salvo:", thumbprint)
         print("Tipo certificado salvo:", tipo)
+
         if tipo == "A3":
 
             self.rbA3.setChecked(True)
@@ -636,29 +693,36 @@ class MainWindow(QMainWindow):
 
             if thumbprint:
 
-              # Mantém o certificado visível no combo
-               self.cmbToken.show()
-              # certificado já conectado, não pedir PIN novamente
-               self.lbPin.hide()
-               self.edPin.hide()
+                # Mantém o certificado visível no combo
+                self.cmbToken.show()
 
-               # Altera o botão
-               self.btAtualizarToken.setText("Editar Certificado")
+                # Certificado já conectado, não pedir PIN novamente
+                self.lbPin.hide()
+                self.edPin.hide()
 
-               print("Modo conectado: certificado carregado")
+                # Altera o botão
+                self.btAtualizarToken.setText("Editar Certificado")
 
+                print("Modo conectado: certificado carregado")
+
+                self.atualizarStatusServico("verificando")
+
+        elif tipo == "A1":
+
+            self.rbA1.setChecked(True)
+
+            self.atualizarTipoCertificado()
+        
     def certificadoSelecionado(self):
 
          # Quando escolher um certificado no combo,
          # libera o campo PIN
 
-               self.lbPin.show()
-               self.edPin.show()
-
-
+        self.lbPin.show()
+        self.edPin.show()
     
-
     def testarConexaoSEFAZ(self):
+
 
         tipo = self.config.get(
             "CERTIFICADO",
@@ -677,17 +741,29 @@ class MainWindow(QMainWindow):
             return
 
         from src.services.SefazClient import SefazClient
-
+        print(SefazClient)
         cliente = SefazClient()
+        print(type(cliente))
+        print(dir(cliente))
 
-        cliente.conectar()
+        resultado = cliente.validarCertificado()
 
-        QMessageBox.information(
-            self,
-            "SEFAZ",
-            "Certificado encontrado.\nPreparando conexão com a SEFAZ..."
-        )
+        if resultado["sucesso"]:
 
+            self.logger.sucesso(resultado["mensagem"])
+
+            self.lbCertificado.setText("🟢 Certificado válido")
+
+            self.atualizarStatusServico("conectado")
+
+        else:
+
+            self.logger.erro(resultado["mensagem"])
+
+            self.lbCertificado.setText("🔴 Certificado vencido")
+
+            self.atualizarStatusServico("aguardando")
+                
     # =====================================================
 
     def iniciarServico(self):
@@ -704,8 +780,30 @@ class MainWindow(QMainWindow):
 
         self.log("Serviço parado.")
 
+
+    def adicionarMensagemLog(self, mensagem):
+        """
+        Recebe mensagens do DiagnosticLogger e exibe no painel de log.
+        """
+        self.txtLog.append(mensagem)
+
     # =====================================================
 
+    def atualizarStatusServico(self, status):
+
+        if status == "aguardando":
+            self.lbServico.setText("🟡 Aguardando configuração")
+
+        elif status == "verificando":
+            self.lbServico.setText("🟡 Verificando serviço...")
+
+        elif status == "conectado":
+            self.lbServico.setText("🟢 Serviço conectado")
+
+        elif status == "desconectado":
+            self.lbServico.setText("🔴 Serviço desconectado")
+
+# =================
     def closeEvent(self, event):
 
         self.log("Encerrando aplicação...")

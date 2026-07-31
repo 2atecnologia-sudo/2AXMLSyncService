@@ -1,20 +1,41 @@
-from urllib import response
-
 from src.config.ConfigManager import ConfigManager
 from src.services.SefazConnection import SefazConnection
 from src.services.SefazSoapBuilder import SefazSoapBuilder
+from src.services.WindowsCertificateStore import WindowsCertificateStore
+
+# =====================================================
+# Resultados possíveis da comunicação
+# =====================================================
+
+STATUS_OK = "OK"
+
+STATUS_CERTIFICADO_NAO_ENCONTRADO = "CERTIFICADO_NAO_ENCONTRADO"
+
+STATUS_CERTIFICADO_VENCIDO = "CERTIFICADO_VENCIDO"
+
+STATUS_CERTIFICADO_INVALIDO = "CERTIFICADO_INVALIDO"
+
+STATUS_SEFAZ_INDISPONIVEL = "SEFAZ_INDISPONIVEL"
+
+STATUS_ERRO_COMUNICACAO = "ERRO_COMUNICACAO"
+
+STATUS_SEM_XML = "SEM_XML"
+
+STATUS_XML_ENCONTRADOS = "XML_ENCONTRADOS"
 
 
 class SefazClient:
+
+    def teste123(self):
+        return "OK"
 
     def __init__(self):
 
         self.certificado = None
         self.conectado = False
 
-        # Configurações da SEFAZ
-        self.uf = "35"              # São Paulo
-        self.ambiente = "1"         # 1=Produção | 2=Homologação
+        self.uf = "35"
+        self.ambiente = "1"
         self.versao = "1.01"
 
         self.url = ""
@@ -38,11 +59,8 @@ class SefazClient:
         self.ambiente = ambiente
 
         if ambiente == "1":
-
             print("Ambiente: Produção")
-
         else:
-
             print("Ambiente: Homologação")
 
     # -------------------------------------------------
@@ -71,6 +89,42 @@ class SefazClient:
         print("Arquivo:", self.arquivoCertificado)
         print("Thumbprint:", self.thumbprint)
 
+
+    #---------------------------------------
+
+    def validarCertificado(self):
+
+        self.carregarConfiguracao()
+
+        store = WindowsCertificateStore()
+
+        certificado = store.localizarPorThumbprint(
+            self.thumbprint
+        )
+
+        if certificado is None:
+
+            return {
+                "sucesso": False,
+                "codigo": STATUS_CERTIFICADO_NAO_ENCONTRADO,
+                "mensagem": "O certificado configurado não foi encontrado."
+            }
+
+        if store.certificadoExpirado(
+            certificado["certificado"]
+        ):
+
+            return {
+                "sucesso": False,
+                "codigo": STATUS_CERTIFICADO_VENCIDO,
+                "mensagem": "O certificado digital está vencido."
+            }
+
+        return {
+            "sucesso": True,
+            "codigo": STATUS_OK,
+            "mensagem": "Certificado válido."
+        }
     # -------------------------------------------------
 
     def conectar(self):
@@ -78,6 +132,35 @@ class SefazClient:
         self.carregarConfiguracao()
 
         print("Conectando à SEFAZ...")
+
+        store = WindowsCertificateStore()
+
+        certificado = store.localizarPorThumbprint(
+            self.thumbprint
+        )
+
+        if certificado is None:
+
+            return {
+                "sucesso": False,
+                "codigo": STATUS_CERTIFICADO_NAO_ENCONTRADO,
+                "mensagem": "O certificado configurado não foi encontrado."
+            }
+
+        if store.certificadoExpirado(
+            certificado["certificado"]
+        ):
+
+            return {
+                "sucesso": False,
+                "codigo": STATUS_CERTIFICADO_VENCIDO,
+                "mensagem": "O certificado digital está vencido."
+            }
+
+        print(
+            "✓ Certificado localizado:",
+            certificado["nome"]
+        )
 
         builder = SefazSoapBuilder()
 
@@ -90,11 +173,12 @@ class SefazClient:
         print("Último NSU:", ultimoNSU)
 
         xml = builder.montarConsultaNSU(
-            self.config.get("GERAL", "cnpj"),
-           ultimoNSU
+            self.config.get(
+                "GERAL",
+                "cnpj"
+            ),
+            ultimoNSU
         )
-
-    
 
         soap = builder.montarEnvelopeSOAP(xml)
 
@@ -107,17 +191,29 @@ class SefazClient:
 
         if response:
 
-            dados = builder.lerRespostaDistribuicao(response.text)
+            dados = builder.lerRespostaDistribuicao(
+                response.text
+            )
 
             print("=" * 40)
             print("DADOS EXTRAÍDOS")
             print("=" * 40)
             print(dados)
+
             self.conectado = True
 
-            return True
+            return {
+                "sucesso": True,
+                "codigo": STATUS_OK,
+                "mensagem": "Comunicação realizada com sucesso."
+            }
 
-        return False
+        return {
+            "sucesso": False,
+            "codigo": STATUS_ERRO_COMUNICACAO,
+            "mensagem": "Não foi possível comunicar com a SEFAZ."
+        }
+
     # -------------------------------------------------
 
     def desconectar(self):

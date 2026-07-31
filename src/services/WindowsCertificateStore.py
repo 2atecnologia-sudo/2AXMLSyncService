@@ -12,17 +12,20 @@ Compatível com:
 - ICP-Brasil
 ===========================================================
 """
-
 import clr
-
-clr.AddReference("System")
+from System import DateTime
+try:
+    clr.AddReference("System.Security.Cryptography.X509Certificates")
+except Exception:
+    clr.AddReference("System")
 
 from System.Security.Cryptography.X509Certificates import (
     X509Store,
     StoreName,
     StoreLocation,
-    OpenFlags
-    )
+    OpenFlags,
+)
+from System import DateTime
 
 
 class WindowsCertificateStore:
@@ -97,3 +100,21 @@ class WindowsCertificateStore:
             store.Close()
 
         return certificados
+
+    def certificadoExpirado(self, certificado):
+        return certificado.NotAfter < DateTime.Now
+
+    def localizarPorThumbprint(self, thumbprint):
+
+        if not thumbprint:
+            return None
+
+        certificados = self.listarCertificados()
+
+        for item in certificados:
+            print("Comparando:", item["thumbprint"])
+            if item["thumbprint"].upper() == thumbprint.upper():
+
+                return item
+
+        return None

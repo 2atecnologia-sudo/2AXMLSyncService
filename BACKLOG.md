@@ -298,3 +298,36 @@ Deseja continuar mesmo assim?"
 Motivação:
 
 Evitar configurações incorretas sem impedir cenários onde o usuário realmente precise utilizar um certificado diferente (casos específicos de procuração eletrônica, certificados de terceiros, etc.).
+
+## BACKLOG-UI-001
+Status: Adiado
+Prioridade: Baixa
+Versão: Pós 1.0
+
+Título:
+Padronizar a comunicação da aplicação utilizando exclusivamente o painel de Log.
+
+Descrição:
+- Remover gradualmente os QMessageBox utilizados para mensagens operacionais.
+- Utilizar o DiagnosticLogger como canal padrão para informações, avisos, erros e sucesso.
+- Manter QMessageBox apenas para confirmações do usuário (Excluir, Sair, Sobrescrever, etc.).
+- Padronizar o formato das mensagens utilizando:
+  - ℹ️ Informação
+  - ✓ Sucesso
+  - ⚠️ Aviso
+  - ❌ Erro
+- Exibir todas as ocorrências operacionais no painel de Log com data e hora.
+- Centralizar a comunicação da aplicação em um único componente para facilitar manutenção e suporte.
+
+Motivo do adiamento:
+Esta melhoria não impacta o funcionamento da aplicação. Será implementada após a conclusão da versão 1.0, quando todas as funcionalidades principais de comunicação com a SEFAZ, download automático de XML e sincronização estiverem concluídas e estabilizadas.
+
+Benefícios esperados:
+- Interface mais profissional.
+- Comunicação padronizada.
+- Eliminação de interrupções desnecessárias durante a operação.
+- Histórico completo de eventos no painel de Log.
+- Maior facilidade de suporte e diagnóstico.
+
+
+Revisar o comportamento do botão "Testar conexão SEFAZ" após a implementação completa da comunicação com a SEFAZ. Avaliar se deve permanecer habilitado apenas com certificado válido ou se sua função deve ser exclusivamente testar a comunicação com o WebService.
