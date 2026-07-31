@@ -1,3 +1,5 @@
+from urllib import response
+
 from src.config.ConfigManager import ConfigManager
 from src.services.SefazConnection import SefazConnection
 from src.services.SefazSoapBuilder import SefazSoapBuilder
@@ -79,23 +81,43 @@ class SefazClient:
 
         builder = SefazSoapBuilder()
 
-        xml = builder.montarConsultaNSU(
-            self.config.get("GERAL", "cnpj"),
+        ultimoNSU = self.config.get(
+            "SEFAZ",
+            "ultimonsu",
             "000000000000000"
         )
+
+        print("Último NSU:", ultimoNSU)
+
+        xml = builder.montarConsultaNSU(
+            self.config.get("GERAL", "cnpj"),
+           ultimoNSU
+        )
+
+    
 
         soap = builder.montarEnvelopeSOAP(xml)
 
         conexao = SefazConnection()
 
-        conexao.enviar(
+        response = conexao.enviar(
             "https://www1.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx",
             soap
         )
 
-        self.conectado = True
+        if response:
 
-        return True
+            dados = builder.lerRespostaDistribuicao(response.text)
+
+            print("=" * 40)
+            print("DADOS EXTRAÍDOS")
+            print("=" * 40)
+            print(dados)
+            self.conectado = True
+
+            return True
+
+        return False
     # -------------------------------------------------
 
     def desconectar(self):

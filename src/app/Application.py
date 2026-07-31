@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 
 from src.config.ConfigManager import ConfigManager
 from src.controllers.ConfigController import ConfigController
+from src.controllers.SyncController import SyncController
 from src.database.Database import Database
 from src.gui.Style import load_style
 from src.utils.Logger import Logger
@@ -49,6 +50,8 @@ class Application:
         self.configController = ConfigController()
 
         self.logger.info("ConfigController inicializado.")
+        self.syncController = SyncController()
+        self.logger.info("SyncController inicializado.")
 
         self.logger.info("Application pronta.")
 

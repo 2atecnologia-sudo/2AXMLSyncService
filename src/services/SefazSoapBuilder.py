@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+import re
 class SefazSoapBuilder:
 
     def __init__(self):
@@ -59,3 +61,53 @@ class SefazSoapBuilder:
 """
 
         return soap
+
+    def montarConsultaChave(self, cnpj, chave):
+
+        return f"""<distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">
+        <tpAmb>1</tpAmb>
+        <cUFAutor>35</cUFAutor>
+        <CNPJ>{cnpj}</CNPJ>
+        <consChNFe>
+            <chNFe>{chave}</chNFe>
+        </consChNFe>
+    </distDFeInt>
+    """
+
+        # -------------------------------------------------
+
+    def lerRespostaDistribuicao(self, xml):
+
+        resultado = {
+            "cStat": "",
+            "xMotivo": "",
+            "ultNSU": "",
+            "maxNSU": ""
+        }
+
+        try:
+
+            root = ET.fromstring(xml)
+
+            ns = {
+                "soap": "http://www.w3.org/2003/05/soap-envelope",
+                "nfe": "http://www.portalfiscal.inf.br/nfe"
+            }
+
+            retorno = root.find(".//nfe:retDistDFeInt", ns)
+
+            if retorno is None:
+                return resultado
+
+            resultado["cStat"] = retorno.findtext("nfe:cStat", default="", namespaces=ns)
+            resultado["xMotivo"] = retorno.findtext("nfe:xMotivo", default="", namespaces=ns)
+            resultado["ultNSU"] = retorno.findtext("nfe:ultNSU", default="", namespaces=ns)
+            resultado["maxNSU"] = retorno.findtext("nfe:maxNSU", default="", namespaces=ns)
+
+            return resultado
+
+        except Exception as e:
+
+            print("Erro lendo XML:", e)
+
+            return resultado

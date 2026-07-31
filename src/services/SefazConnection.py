@@ -1,5 +1,12 @@
 from requests_schannel.adapters import create_session
 from src.config.ConfigManager import ConfigManager
+from datetime import datetime
+import xml.etree.ElementTree as ET
+import base64
+import gzip
+import re
+import os
+
 
 class SefazConnection:
 
@@ -15,8 +22,6 @@ class SefazConnection:
     def configurarCertificado(self, certificado):
 
         self.certificado = certificado
-
-    # -------------------------------------------------
 
     # -------------------------------------------------
 
@@ -40,7 +45,7 @@ class SefazConnection:
 
         print("✓ Sessão HTTPS criada com sucesso.")
 
-
+    # -------------------------------------------------
 
     def enviar(self, url, soap):
 
@@ -79,6 +84,112 @@ class SefazConnection:
             print("HTTP:", response.status_code)
             print()
             print(response.text)
+
+            # ------------------------------------------
+            # Extrai o primeiro docZip da resposta
+            # ------------------------------------------
+
+            match = re.search(
+                r"<docZip[^>]*>(.*?)</docZip>",
+                response.text,
+                re.DOTALL
+            )
+
+            if match:
+
+                print()
+                print("=" * 60)
+                print("DOCZIP LOCALIZADO")
+                print("=" * 60)
+
+                conteudo = match.group(1)
+
+                xml = gzip.decompress(
+                    base64.b64decode(conteudo)
+                ).decode("utf-8")
+
+                print()
+                print("=" * 60)
+                print("XML DESCOMPACTADO")
+                print("=" * 60)
+                print(xml)
+
+                # ------------------------------------------
+# Salva o XML em disco
+# ------------------------------------------
+
+                pasta_xml = self.config.get(
+                    "GERAL",
+                    "pasta_xml",
+                    "C:/MIS"
+                )
+
+                os.makedirs(
+                    pasta_xml,
+                    exist_ok=True
+                )
+
+                nome_arquivo = (
+                    "NFe_"
+                    + datetime.now().strftime("%Y%m%d_%H%M%S")
+                    + ".xml"
+                )
+
+                caminho = os.path.join(
+                    pasta_xml,
+                    nome_arquivo
+                )
+
+                with open(
+                    caminho,
+                    "w",
+                    encoding="utf-8"
+                ) as arquivo:
+
+                    arquivo.write(xml)
+
+                print()
+                print("=" * 60)
+                print("XML SALVO")
+                print("=" * 60)
+                print(caminho)
+
+            else:
+
+                print()
+                print("Nenhum docZip encontrado.")
+
+            # ------------------------------------------
+            # Atualiza o último NSU
+            # ------------------------------------------
+
+            try:
+
+                root = ET.fromstring(response.text)
+
+                ns = {
+                    "soap": "http://www.w3.org/2003/05/soap-envelope",
+                    "nfe": "http://www.portalfiscal.inf.br/nfe"
+                }
+
+                ultNSU = root.find(".//nfe:ultNSU", ns)
+
+                if ultNSU is not None:
+
+                    self.config.set(
+                        "SEFAZ",
+                        "ultimonsu",
+                        ultNSU.text
+                    )
+
+                    print()
+                    print("========================================")
+                    print("Último NSU atualizado:", ultNSU.text)
+                    print("========================================")
+
+            except Exception as e:
+
+                print("Erro ao atualizar o último NSU:", e)
 
             return response
 

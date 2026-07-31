@@ -151,6 +151,11 @@ class MainWindow(QMainWindow):
 
         self.edPasta = QLineEdit()
 
+        if not self.edPasta.text():
+            self.edPasta.setText("C:/MIS")
+        
+        self.edPasta.setReadOnly(True)
+
         self.btPasta = QPushButton("...")
 
         linha2.addWidget(self.edPasta)
@@ -464,61 +469,90 @@ class MainWindow(QMainWindow):
         )
 
         if pasta:
+
+            import os
+
+            if not os.path.exists(pasta):
+
+                os.makedirs(
+                    pasta,
+                    exist_ok=True
+                )
+
             self.edPasta.setText(pasta)
 
     # =====================================================
 
+    
     def salvarConfiguracao(self):
 
-        self.config.set("GERAL", "empresa", self.edEmpresa.text())
-        self.config.set("GERAL", "cnpj", self.edCNPJ.text())
+            cnpj = self.edCNPJ.text().strip()
+
+            if len(cnpj) != 14 or not cnpj.isdigit():
+
+                QMessageBox.warning(
+                    self,
+                    "CNPJ inválido",
+                    "Informe um CNPJ válido com 14 dígitos."
+                )
+
+                self.edCNPJ.setFocus()
+
+                return
+
+            self.config.set("GERAL", "empresa", self.edEmpresa.text())
+            self.config.set("GERAL", "cnpj", cnpj)
 
     # ---------------- Tipo do certificado ----------------
 
-        if self.rbA1.isChecked():
+            self.config.set("GERAL", "empresa", self.edEmpresa.text())
+            self.config.set("GERAL", "cnpj", self.edCNPJ.text())
 
-            self.config.set("CERTIFICADO", "tipo", "A1")
-            self.config.set("CERTIFICADO", "arquivo", self.edCertificado.text())
-            self.config.set("CERTIFICADO", "senha", self.edSenha.text())
-            self.config.set("CERTIFICADO", "thumbprint", "")
-            self.config.set("CERTIFICADO", "nome", "")
+    # ---------------- Tipo do certificado ----------------
 
-        elif self.rbA3.isChecked():
+            if self.rbA1.isChecked():
 
-            self.config.set("CERTIFICADO", "tipo", "A3")
+                self.config.set("CERTIFICADO", "tipo", "A1")
+                self.config.set("CERTIFICADO", "arquivo", self.edCertificado.text())
+                self.config.set("CERTIFICADO", "senha", self.edSenha.text())
+                self.config.set("CERTIFICADO", "thumbprint", "")
+                self.config.set("CERTIFICADO", "nome", "")
 
-            indice = self.cmbToken.currentIndex()
+            elif self.rbA3.isChecked():
 
-            if indice >= 0 and hasattr(self, "certificados"):
+                self.config.set("CERTIFICADO", "tipo", "A3")
 
-                cert = self.certificados[indice]
+                indice = self.cmbToken.currentIndex()
 
-                self.config.set(
-                "CERTIFICADO",
-                "thumbprint",
-                cert["thumbprint"]
-               )
+                if indice >= 0 and hasattr(self, "certificados"):
 
-            self.config.set(
-                "CERTIFICADO",
-                "nome",
-                cert["nome"]
-            )
+                    cert = self.certificados[indice]
 
-            self.config.set("CERTIFICADO", "arquivo", "")
-            self.config.set("CERTIFICADO", "senha", "")
+                    self.config.set("CERTIFICADO", "thumbprint", cert.get("thumbprint", ""))
+                    self.config.set("CERTIFICADO", "nome", cert.get("nome", ""))
+                else:
+                    # nenhum certificado selecionado
+                    self.config.set("CERTIFICADO", "thumbprint", "")
+                    self.config.set("CERTIFICADO", "nome", "")
 
-        else:
+                self.config.set("CERTIFICADO", "arquivo", "")
+                self.config.set("CERTIFICADO", "senha", "")
 
-             self.config.set("CERTIFICADO", "tipo", "CLOUD")
+            else:
+
+                self.config.set("CERTIFICADO", "tipo", "CLOUD")
+                self.config.set("CERTIFICADO", "arquivo", "")
+                self.config.set("CERTIFICADO", "senha", "")
+                self.config.set("CERTIFICADO", "thumbprint", "")
+                self.config.set("CERTIFICADO", "nome", "")
 
     # ---------------- XML ----------------
 
-        self.config.set("XML", "pasta", self.edPasta.text())
-        self.config.set("XML", "intervalo", self.spIntervalo.value())
-        if self.rbA3.isChecked():
+            self.config.set("XML", "pasta", self.edPasta.text())
+            self.config.set("XML", "intervalo", self.spIntervalo.value())
+            if self.rbA3.isChecked():
 
-            self.config.set(
+                self.config.set(
                "CERTIFICADO",
                "tipo",
                "A3"
@@ -530,16 +564,16 @@ class MainWindow(QMainWindow):
                "sim"
         )
 
-        self.config.save()
+            self.config.save()
 
-        self.log("Configuração salva com sucesso.")
+            self.log("Configuração salva com sucesso.")
 
-        if self.rbA3.isChecked():
+            if self.rbA3.isChecked():
 
-           if self.edPin.text().strip():
+                if self.edPin.text().strip():
 
-                self.lbPin.hide()
-                self.edPin.hide()
+                    self.lbPin.hide()
+                    self.edPin.hide()
 
                 print("✓ Certificado A3 conectado")
     # =====================================================
