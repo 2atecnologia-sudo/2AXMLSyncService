@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
 
         cliente = SefazClient()
 
-        resultado = cliente.validarCertificado()
+        resultado = cliente.conectar()
 
         if not resultado["sucesso"]:
 

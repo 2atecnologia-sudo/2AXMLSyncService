@@ -331,3 +331,43 @@ Benefícios esperados:
 
 
 Revisar o comportamento do botão "Testar conexão SEFAZ" após a implementação completa da comunicação com a SEFAZ. Avaliar se deve permanecer habilitado apenas com certificado válido ou se sua função deve ser exclusivamente testar a comunicação com o WebService.
+
+
+
+-------------------------
+
+Backlog
+
+Refatoração: Centralização do gerenciamento de estado dos certificados
+
+Objetivo
+Criar um gerenciador único para o estado dos certificados (A1/A3), centralizando a validação, atualização da interface e mensagens de log.
+
+Escopo
+
+Criar um enum StatusCertificado.
+Criar um método único setStatusCertificado() responsável por:
+Atualizar o status interno.
+Atualizar os textos da interface.
+Atualizar as cores e ícones.
+Registrar mensagens no log.
+Separar o conceito de tipo do certificado (A1/A3) do estado do certificado (válido, vencido, aguardando, não encontrado, erro).
+Eliminar validações duplicadas espalhadas pela interface.
+Preparar a arquitetura para a comunicação com a SEFAZ.
+
+Estados previstos
+
+Nenhum certificado configurado.
+Aguardando seleção do arquivo PFX (A1).
+Aguardando seleção do certificado do Windows (A3).
+Certificado válido.
+Certificado vencido.
+Certificado não encontrado.
+Erro de leitura do certificado.
+
+Benefícios
+
+Código mais organizado e de fácil manutenção.
+Interface sempre consistente.
+Redução de código duplicado.
+Facilidade para futuras implementações (SEFAZ, certificados em nuvem, renovação de certificados, etc.)
